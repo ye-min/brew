@@ -139,7 +139,7 @@ module Cask
     # The caskfile is needed during installation when there are
     # `*flight` blocks or the cask has multiple languages
     def caskfile_only?
-      languages.any? || artifacts.any?(Artifact::AbstractFlightBlock)
+      @caskfile_only || languages.any? || artifacts.any?(Artifact::AbstractFlightBlock)
     end
 
     sig { returns(T.nilable(Time)) }
@@ -292,15 +292,16 @@ module Cask
     def populate_from_api!(json_cask)
       raise ArgumentError, "Expected cask to be loaded from the API" unless loaded_from_api?
 
+      @caskfile_only = json_cask[:caskfile_only]
       @languages = json_cask.fetch(:languages, [])
       @tap_git_head = json_cask.fetch(:tap_git_head, "HEAD")
 
       @ruby_source_path = json_cask[:ruby_source_path]
-
-      # TODO: Clean this up when we deprecate the current JSON API and move to the internal JSON v3.
-      ruby_source_sha256 = json_cask.dig(:ruby_source_checksum, :sha256)
-      ruby_source_sha256 ||= json_cask[:ruby_source_sha256]
-      @ruby_source_checksum = { "sha256" => ruby_source_sha256 }
+      @ruby_source_checksum = if Homebrew::API.internal_json_v3?
+        { "sha256" => json_cask.fetch(:ruby_source_sha256) }
+      else
+        json_cask[:ruby_source_checksum]
+      end
     end
 
     def to_s
