@@ -46,7 +46,7 @@ RSpec.describe "Internal Tap JSON -- Cask" do
         "ankerslicer"        => "ankermake",
         "autodesk-fusion360" => "autodesk-fusion",
         "betterdummy"        => "betterdisplay",
-        "julia-lang"         => "julia",
+        "factor-lang"        => "factor",
         "smlnj-lang"         => "smlnj",
       })
     end
@@ -67,16 +67,16 @@ RSpec.describe "Internal Tap JSON -- Cask" do
     end
 
     context "when loading formulae" do
-      let(:julia_metadata) do
+      let(:factor_metadata) do
         {
-          "token"                => "julia",
-          "name"                 => %w[Julia],
-          "desc"                 => "Programming language for technical computing",
-          "homepage"             => "https://julialang.org/",
-          "version"              => "1.10.2",
-          "ruby_source_path"     => "Casks/j/julia.rb",
+          "token"                => "factor",
+          "name"                 => %w[Factor],
+          "desc"                 => "Programming language",
+          "homepage"             => "https://factorcode.org/",
+          "version"              => "0.99",
+          "ruby_source_path"     => "Casks/f/factor.rb",
           "ruby_source_checksum" => {
-            "sha256" => "7fbf6c98c0a3b75ca8636c141f38512a899565a58518fc714e5f73c210e24449",
+            "sha256" => "a0dabe24c67269e5310b47639cf32e74f49959ba1be454b2c072805b1f04c7e5",
           },
         }
       end
@@ -95,16 +95,16 @@ RSpec.describe "Internal Tap JSON -- Cask" do
         }
       end
 
-      it "loads julia" do
-        julia = Cask::CaskLoader.load("julia")
-        expect(julia.to_h).to include(julia_metadata)
-        expect(julia.sha256).to eq("26b822154ae05f2c2b66d2b1538e1df86f1bb39967cbc9380a7f2271f5a677ce")
-        expect(julia.url.to_s).to eq("https://julialang-s3.julialang.org/bin/mac/x64/1.10/julia-1.10.2-mac64.dmg")
+      it "loads factor" do
+        factor = Cask::CaskLoader.load("factor")
+        expect(factor.to_h).to include(factor_metadata)
+        expect(factor.sha256).to eq("8a7968b873b5e87c83b5d0f5ddb4d3d76a2460f5e5c14edac6b18fe5957bd7d6")
+        expect(factor.url.to_s).to eq("https://downloads.factorcode.org/releases/0.99/factor-macosx-x86-64-0.99.dmg")
       end
 
-      it "loads julia from rename" do
-        julia = Cask::CaskLoader.load("julia-lang")
-        expect(julia.to_h).to include(**julia_metadata)
+      it "loads factor from rename" do
+        factor = Cask::CaskLoader.load("factor-lang")
+        expect(factor.to_h).to include(**factor_metadata)
       end
 
       it "loads smlnj" do

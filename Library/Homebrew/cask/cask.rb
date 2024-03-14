@@ -362,7 +362,6 @@ module Cask
     # @private
     def to_internal_api_hash
       api_hash = {
-        "token"              => token,
         "name"               => name,
         "desc"               => desc,
         "homepage"           => homepage,
