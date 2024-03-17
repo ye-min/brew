@@ -297,11 +297,8 @@ module Cask
       @tap_git_head = json_cask.fetch(:tap_git_head, "HEAD")
 
       @ruby_source_path = json_cask[:ruby_source_path]
-      @ruby_source_checksum = if Homebrew::API.internal_json_v3?
-        { "sha256" => json_cask.fetch(:ruby_source_sha256) }
-      else
-        json_cask[:ruby_source_checksum]
-      end
+      @ruby_source_checksum = json_cask[:ruby_source_checksum] || # public JSON v2
+                              json_cask[:ruby_source_sha256]&.then { { "sha256" => _1 } } # internal JSON v3
     end
 
     def to_s
