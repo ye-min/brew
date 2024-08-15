@@ -6,7 +6,7 @@ require "keg"
 require "tab"
 require "utils/bottles"
 require "caveats"
-require "cleaner_factory"
+require "cleaner"
 require "formula_cellar_checks"
 require "install_renamed"
 require "sandbox"
@@ -1107,7 +1107,7 @@ on_request: installed_on_request?, options:)
   sig { void }
   def clean
     ohai "Cleaning" if verbose?
-    CleanerFactory.create(formula).clean
+    Cleaner.new(formula).clean
   rescue Exception => e # rubocop:disable Lint/RescueException
     opoo "The cleaning step did not complete successfully"
     puts "Still, the installation was successful, so we will link it into your prefix."

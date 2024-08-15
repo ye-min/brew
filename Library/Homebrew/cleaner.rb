@@ -1,4 +1,4 @@
-# typed: strict
+# typed: true # rubocop:todo Sorbet/StrictSigil
 # frozen_string_literal: true
 
 # Cleans a newly installed keg.
@@ -104,7 +104,7 @@ class Cleaner
     end
   end
 
-  sig { overridable.params(path: Pathname).returns(T::Boolean) }
+  sig { params(path: Pathname).returns(T::Boolean) }
   def executable_path?(path)
     path.text_executable? || path.executable?
   end
@@ -113,7 +113,7 @@ class Cleaner
   # pointless conflicts with other formulae. They are removed by Debian,
   # Arch & MacPorts amongst other packagers as well. The files are
   # created as part of installing any Perl module.
-  PERL_BASENAMES = T.let(Set.new(%w[perllocal.pod .packlist]).freeze, T::Set[String])
+  PERL_BASENAMES = Set.new(%w[perllocal.pod .packlist]).freeze
 
   # Clean a top-level (`bin`, `sbin`, `lib`) directory, recursively, by fixing file
   # permissions and removing .la files, unless the files (or parent
@@ -201,3 +201,5 @@ class Cleaner
     end
   end
 end
+
+require "extend/os/cleaner"
