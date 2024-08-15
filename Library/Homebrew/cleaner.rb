@@ -202,4 +202,6 @@ class Cleaner
   end
 end
 
+# I would like to elevate this to the top of the file, but that is an error:
+#   https://github.com/sorbet/sorbet/blob/685f197/gems/sorbet-runtime/lib/types/private/class_utils.rb#L115
 require "extend/os/cleaner"
