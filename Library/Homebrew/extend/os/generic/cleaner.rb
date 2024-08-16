@@ -6,6 +6,6 @@ class Cleaner
 
   sig { override.params(path: Pathname).returns(T::Boolean) }
   def executable_path?(path)
-    path.mach_o_executable? || path.text_executable?
+    path.text_executable? || path.executable?
   end
 end

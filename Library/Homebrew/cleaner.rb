@@ -1,5 +1,18 @@
-# typed: true # rubocop:todo Sorbet/StrictSigil
+# typed: strict
 # frozen_string_literal: true
+
+require "extend/os/cleaner"
+
+# The interface that defines OS-specific Cleaner methods.
+module CleanerOS
+  extend T::Helpers
+  interface!
+
+  private
+
+  sig { abstract.params(path: Pathname).returns(T::Boolean) }
+  def executable_path?(path); end
+end
 
 # Cleans a newly installed keg.
 # By default:
@@ -13,6 +26,7 @@
 # * removes unresolved symlinks
 class Cleaner
   include Context
+  include CleanerOS
 
   # Create a cleaner for the given formula.
   sig { params(formula: Formula).void }
@@ -104,16 +118,11 @@ class Cleaner
     end
   end
 
-  sig { params(path: Pathname).returns(T::Boolean) }
-  def executable_path?(path)
-    path.text_executable? || path.executable?
-  end
-
   # Both these files are completely unnecessary to package and cause
   # pointless conflicts with other formulae. They are removed by Debian,
   # Arch & MacPorts amongst other packagers as well. The files are
   # created as part of installing any Perl module.
-  PERL_BASENAMES = Set.new(%w[perllocal.pod .packlist]).freeze
+  PERL_BASENAMES = T.let(Set.new(%w[perllocal.pod .packlist]).freeze, T::Set[String])
 
   # Clean a top-level (`bin`, `sbin`, `lib`) directory, recursively, by fixing file
   # permissions and removing .la files, unless the files (or parent
@@ -201,7 +210,3 @@ class Cleaner
     end
   end
 end
-
-# I would like to elevate this to the top of the file, but that is an error:
-#   https://github.com/sorbet/sorbet/blob/685f197/gems/sorbet-runtime/lib/types/private/class_utils.rb#L115
-require "extend/os/cleaner"
