@@ -396,9 +396,6 @@ then
   fi
 fi
 
-# USER isn't always set so provide a fall back for `brew` and subprocesses.
-export USER="${USER:-$(id -un)}"
-
 # A depth of 1 means this command was directly invoked by a user.
 # Higher depths mean this command was invoked by another Homebrew command.
 export HOMEBREW_COMMAND_DEPTH="$((HOMEBREW_COMMAND_DEPTH + 1))"

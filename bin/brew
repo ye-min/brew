@@ -120,6 +120,9 @@ export_homebrew_env_file() {
   done <"${env_file}"
 }
 
+# We only want to read this from `brew.env` files instead of the environment.
+unset HOMEBREW_USER
+
 # First, load the system-wide configuration.
 unset SYSTEM_ENV_TAKES_PRIORITY
 if [[ -n "${HOMEBREW_SYSTEM_ENV_TAKES_PRIORITY-}" ]]
@@ -146,6 +149,19 @@ export_homebrew_env_file "${HOMEBREW_USER_CONFIG_HOME}/brew.env"
 if [[ -n "${SYSTEM_ENV_TAKES_PRIORITY-}" ]]
 then
   export_homebrew_env_file "/etc/homebrew/brew.env"
+fi
+
+# USER isn't always set so provide a fall back for `brew` and subprocesses.
+export USER="${USER:-$(id -un)}"
+
+if [[ -n "${HOMEBREW_USER-}" && "${HOMEBREW_USER}" != "${USER}" ]]
+then
+  cat >&2 <<ERROR
+Error: \`brew\` is configured to be run by the \`${HOMEBREW_USER}\` user but you are running it as \`${USER}\`!
+Please contact your system administrator for the correct way to run \`brew\`.
+ERROR
+
+  exit 1
 fi
 
 # Copy and export all HOMEBREW_* variables previously mentioned in
