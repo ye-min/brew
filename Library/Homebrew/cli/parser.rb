@@ -5,6 +5,7 @@ require "abstract_command"
 require "env_config"
 require "cask/config"
 require "cli/args"
+require "cli/error"
 require "commands"
 require "optparse"
 require "utils/tty"
@@ -251,7 +252,7 @@ module Homebrew
         description = option_description(description, name, hidden:)
         process_option(name, description, type: :comma_array, hidden:)
         @parser.on(name, OptionParser::REQUIRED_ARGUMENT, Array, *wrap_option_desc(description)) do |list|
-          @args[option_to_name(name)] = list
+          @args.define_singleton_method(option_to_name(name)) { list }
         end
       end
 
@@ -276,7 +277,7 @@ module Homebrew
           # This odisabled should stick around indefinitely.
           odisabled "the `#{names.first}` flag", replacement unless replacement.nil?
           names.each do |name|
-            @args[option_to_name(name)] = option_value
+            @args.define_singleton_method(option_to_name(name)) { option_value }
           end
         end
 
@@ -559,24 +560,27 @@ module Homebrew
       def set_switch(*names, value:, from:)
         names.each do |name|
           @switch_sources[option_to_name(name)] = from
-          @args["#{option_to_name(name)}?"] = value
+          @args.define_singleton_method(:"#{option_to_name(name)}?") { value }
         end
       end
 
       sig { params(args: String).void }
       def disable_switch(*args)
         args.each do |name|
-          @args["#{option_to_name(name)}?"] = if name.start_with?("--[no-]")
+          result = if name.start_with?("--[no-]")
             nil
           else
             false
           end
+          @args.define_singleton_method(:"#{option_to_name(name)}?") { result }
         end
       end
 
       sig { params(name: String).returns(T::Boolean) }
       def option_passed?(name)
-        !!(@args[name.to_sym] || @args[:"#{name}?"])
+        [name.to_sym, :"#{name}?"].any? do |method|
+          @args.public_send(method) if @args.respond_to?(method)
+        end
       end
 
       sig { params(desc: String).returns(T::Array[String]) }
@@ -677,7 +681,7 @@ module Homebrew
           disable_switch(*args)
         else
           args.each do |name|
-            @args[option_to_name(name)] = nil
+            @args.define_singleton_method(option_to_name(name)) { nil }
           end
         end
 
@@ -734,71 +738,6 @@ module Homebrew
         else
           ENV.fetch("HOMEBREW_#{env.upcase}", nil)
         end
-      end
-    end
-
-    class OptionConstraintError < UsageError
-      sig { params(arg1: String, arg2: String, missing: T::Boolean).void }
-      def initialize(arg1, arg2, missing: false)
-        message = if missing
-          "`#{arg2}` cannot be passed without `#{arg1}`."
-        else
-          "`#{arg1}` and `#{arg2}` should be passed together."
-        end
-        super message
-      end
-    end
-
-    class OptionConflictError < UsageError
-      sig { params(args: T::Array[String]).void }
-      def initialize(args)
-        args_list = args.map { Formatter.option(_1) }.join(" and ")
-        super "Options #{args_list} are mutually exclusive."
-      end
-    end
-
-    class InvalidConstraintError < UsageError
-      sig { params(arg1: String, arg2: String).void }
-      def initialize(arg1, arg2)
-        super "`#{arg1}` and `#{arg2}` cannot be mutually exclusive and mutually dependent simultaneously."
-      end
-    end
-
-    class MaxNamedArgumentsError < UsageError
-      sig { params(maximum: Integer, types: T::Array[Symbol]).void }
-      def initialize(maximum, types: [])
-        super case maximum
-        when 0
-          "This command does not take named arguments."
-        else
-          types << :named if types.empty?
-          arg_types = types.map { |type| type.to_s.tr("_", " ") }
-                           .to_sentence two_words_connector: " or ", last_word_connector: " or "
-
-          "This command does not take more than #{maximum} #{arg_types} #{Utils.pluralize("argument", maximum)}."
-        end
-      end
-    end
-
-    class MinNamedArgumentsError < UsageError
-      sig { params(minimum: Integer, types: T::Array[Symbol]).void }
-      def initialize(minimum, types: [])
-        types << :named if types.empty?
-        arg_types = types.map { |type| type.to_s.tr("_", " ") }
-                         .to_sentence two_words_connector: " or ", last_word_connector: " or "
-
-        super "This command requires at least #{minimum} #{arg_types} #{Utils.pluralize("argument", minimum)}."
-      end
-    end
-
-    class NumberOfNamedArgumentsError < UsageError
-      sig { params(minimum: Integer, types: T::Array[Symbol]).void }
-      def initialize(minimum, types: [])
-        types << :named if types.empty?
-        arg_types = types.map { |type| type.to_s.tr("_", " ") }
-                         .to_sentence two_words_connector: " or ", last_word_connector: " or "
-
-        super "This command requires exactly #{minimum} #{arg_types} #{Utils.pluralize("argument", minimum)}."
       end
     end
   end
