@@ -56,7 +56,13 @@ module Homebrew
       def build_from_source? = false
 
       sig { returns(T::Boolean) }
+      def cask? = false
+
+      sig { returns(T::Boolean) }
       def force_bottle? = false
+
+      # Defined in extend/os:
+      # def formula; end
 
       sig { returns(T::Boolean) }
       def HEAD? = false
@@ -122,9 +128,9 @@ module Homebrew
 
       sig { returns(T.nilable(Symbol)) }
       def only_formula_or_cask
-        if invoke_if_respond_to(:formula?) && !invoke_if_respond_to(:cask?)
+        if formula? && !cask?
           :formula
-        elsif invoke_if_respond_to(:cask?) && !invoke_if_respond_to(:formula?)
+        elsif cask? && !formula?
           :cask
         end
       end
@@ -194,7 +200,7 @@ module Homebrew
 
       # FIXME: This is here for compatibility with the previous implementation that used OpenStruct.
       # This is for args that need to determine whether they have been set or not, and thus may not support a default
-      # implementation. (The Linux override of `set_default_options` might be one example.)
+      # implementation.
       sig { params(method: Symbol).returns(T.untyped) }
       def invoke_if_respond_to(method)
         public_send(method) if respond_to?(method)
